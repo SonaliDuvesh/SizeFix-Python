@@ -45,6 +45,26 @@ def sample_bmp_path(tmp_path: Path) -> Path:
     return img_path
 
 @pytest.fixture
+def sample_animated_gif_path(tmp_path: Path) -> Path:
+    gif_path = tmp_path / "test_animation.gif"
+    frames = []
+    for i in range(5):
+        frame = Image.new("RGBA", (120, 120), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(frame)
+        draw.ellipse([10 + i * 15, 20, 40 + i * 15, 50], fill=(220, 60, 100 + i * 30, 255))
+        frames.append(frame)
+    frames[0].save(
+        gif_path,
+        format="GIF",
+        save_all=True,
+        append_images=frames[1:],
+        duration=150,
+        loop=0,
+        optimize=True
+    )
+    return gif_path
+
+@pytest.fixture
 def sample_pdf_path(tmp_path: Path) -> Path:
     pdf_path = tmp_path / "test_document.pdf"
     doc = fitz.open()

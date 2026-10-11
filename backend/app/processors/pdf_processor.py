@@ -1,5 +1,6 @@
 import io
-import fitz
+import zipfile
+import pymupdf as fitz
 from PIL import Image
 from pathlib import Path
 from typing import Optional, Tuple
@@ -240,41 +241,145 @@ class PDFProcessor(BaseProcessor):
             if req_fmt in ("jpg", "png", "webp"):
                 with fitz.open(input_path) as doc:
                     total_pages = len(doc)
-                    page = doc[0]
-                    pix = page.get_pixmap(dpi=150)
-                    img_w, img_h = pix.width, pix.height
-                    
-                    with Image.frombytes("RGB", [pix.width, pix.height], pix.samples) as pil_img:
+                    export_mode = (getattr(options, "pdf_image_mode", None) or "separate").lower()
+
+                    if total_pages == 1 or export_mode == "first_page":
+                        page = doc[0]
+                        pix = page.get_pixmap(dpi=150)
+                        img_w, img_h = pix.width, pix.height
+                        
+                        with Image.frombytes("RGB", [pix.width, pix.height], pix.samples) as pil_img:
+                            if req_fmt == "jpg":
+                                pil_img.save(output_path, format="JPEG", quality=options.quality or 85, optimize=True)
+                            elif req_fmt == "png":
+                                pil_img.save(output_path, format="PNG", optimize=True)
+                            elif req_fmt == "webp":
+                                pil_img.save(output_path, format="WEBP", quality=options.quality or 85)
+                                
+                        output_size = output_path.stat().st_size
+                        saved_bytes = original_size - output_size
+                        return ProcessResult(
+                            success=True,
+                            original_filename=analysis.filename,
+                            output_filename=output_path.name,
+                            original_size=original_size,
+                            original_size_human=format_bytes(original_size),
+                            output_size=output_size,
+                            output_size_human=format_bytes(output_size),
+                            target_size=target_bytes,
+                            target_size_human=format_bytes(target_bytes) if target_bytes else None,
+                            target_reached=True,
+                            compression_ratio=round(saved_bytes / original_size, 4) if original_size > 0 else 0.0,
+                            saved_bytes=saved_bytes,
+                            saved_bytes_human=format_bytes(abs(saved_bytes)),
+                            format=req_fmt,
+                            mode=options.target_mode,
+                            reason=f"Converted PDF page 1 to high-res {req_fmt.upper()}.",
+                            pages=total_pages,
+                            width=img_w,
+                            height=img_h
+                        )
+
+                    elif export_mode == "stitch":
+                        pil_pages = []
+                        for page in doc:
+                            pix = page.get_pixmap(dpi=150)
+                            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                            pil_pages.append(img)
+
+                        max_w = max(p.width for p in pil_pages)
+                        total_h = sum(p.height for p in pil_pages)
+                        stitched = Image.new("RGB", (max_w, total_h), (255, 255, 255))
+                        y_offset = 0
+                        for p in pil_pages:
+                            stitched.paste(p, (0, y_offset))
+                            y_offset += p.height
+                            p.close()
+
+                        img_w, img_h = max_w, total_h
                         if req_fmt == "jpg":
-                            pil_img.save(output_path, format="JPEG", quality=options.quality or 85, optimize=True)
+                            stitched.save(output_path, format="JPEG", quality=options.quality or 85, optimize=True)
                         elif req_fmt == "png":
-                            pil_img.save(output_path, format="PNG", optimize=True)
+                            stitched.save(output_path, format="PNG", optimize=True)
                         elif req_fmt == "webp":
-                            pil_img.save(output_path, format="WEBP", quality=options.quality or 85)
-                            
-                output_size = output_path.stat().st_size
-                saved_bytes = original_size - output_size
-                return ProcessResult(
-                    success=True,
-                    original_filename=analysis.filename,
-                    output_filename=output_path.name,
-                    original_size=original_size,
-                    original_size_human=format_bytes(original_size),
-                    output_size=output_size,
-                    output_size_human=format_bytes(output_size),
-                    target_size=target_bytes,
-                    target_size_human=format_bytes(target_bytes) if target_bytes else None,
-                    target_reached=True,
-                    compression_ratio=round(saved_bytes / original_size, 4) if original_size > 0 else 0.0,
-                    saved_bytes=saved_bytes,
-                    saved_bytes_human=format_bytes(abs(saved_bytes)),
-                    format=req_fmt,
-                    mode=options.target_mode,
-                    reason=f"Converted PDF page to high-res {req_fmt.upper()}.",
-                    pages=total_pages,
-                    width=img_w,
-                    height=img_h
-                )
+                            stitched.save(output_path, format="WEBP", quality=options.quality or 85)
+                        stitched.close()
+
+                        output_size = output_path.stat().st_size
+                        saved_bytes = original_size - output_size
+                        return ProcessResult(
+                            success=True,
+                            original_filename=analysis.filename,
+                            output_filename=output_path.name,
+                            original_size=original_size,
+                            original_size_human=format_bytes(original_size),
+                            output_size=output_size,
+                            output_size_human=format_bytes(output_size),
+                            target_size=target_bytes,
+                            target_size_human=format_bytes(target_bytes) if target_bytes else None,
+                            target_reached=True,
+                            compression_ratio=round(saved_bytes / original_size, 4) if original_size > 0 else 0.0,
+                            saved_bytes=saved_bytes,
+                            saved_bytes_human=format_bytes(abs(saved_bytes)),
+                            format=req_fmt,
+                            mode=options.target_mode,
+                            reason=f"Stitched all {total_pages} PDF pages into a continuous {req_fmt.upper()} image.",
+                            pages=total_pages,
+                            width=img_w,
+                            height=img_h
+                        )
+
+                    else:
+                        # Default "separate": Render each page and bundle into a ZIP archive
+                        zip_output_path = output_path.with_suffix(".zip")
+
+                        # Save first page to output_path for UI preview
+                        first_pix = doc[0].get_pixmap(dpi=150)
+                        img_w, img_h = first_pix.width, first_pix.height
+                        with Image.frombytes("RGB", [first_pix.width, first_pix.height], first_pix.samples) as first_img:
+                            if req_fmt == "jpg":
+                                first_img.save(output_path, format="JPEG", quality=options.quality or 85, optimize=True)
+                            elif req_fmt == "png":
+                                first_img.save(output_path, format="PNG", optimize=True)
+                            elif req_fmt == "webp":
+                                first_img.save(output_path, format="WEBP", quality=options.quality or 85)
+
+                        with zipfile.ZipFile(str(zip_output_path), "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                            for idx, page in enumerate(doc, start=1):
+                                pix = page.get_pixmap(dpi=150)
+                                with Image.frombytes("RGB", [pix.width, pix.height], pix.samples) as pil_img:
+                                    buf = io.BytesIO()
+                                    if req_fmt == "jpg":
+                                        pil_img.save(buf, format="JPEG", quality=options.quality or 85, optimize=True)
+                                    elif req_fmt == "png":
+                                        pil_img.save(buf, format="PNG", optimize=True)
+                                    elif req_fmt == "webp":
+                                        pil_img.save(buf, format="WEBP", quality=options.quality or 85)
+                                    zf.writestr(f"page_{idx:02d}.{req_fmt}", buf.getvalue())
+
+                        output_size = zip_output_path.stat().st_size
+                        saved_bytes = original_size - output_size
+                        return ProcessResult(
+                            success=True,
+                            original_filename=analysis.filename,
+                            output_filename=zip_output_path.name,
+                            original_size=original_size,
+                            original_size_human=format_bytes(original_size),
+                            output_size=output_size,
+                            output_size_human=format_bytes(output_size),
+                            target_size=target_bytes,
+                            target_size_human=format_bytes(target_bytes) if target_bytes else None,
+                            target_reached=True,
+                            compression_ratio=round(saved_bytes / original_size, 4) if original_size > 0 else 0.0,
+                            saved_bytes=saved_bytes,
+                            saved_bytes_human=format_bytes(abs(saved_bytes)),
+                            format="zip",
+                            mode=options.target_mode,
+                            reason=f"Converted all {total_pages} PDF pages to {req_fmt.upper()} images (packaged in ZIP).",
+                            pages=total_pages,
+                            width=img_w,
+                            height=img_h
+                        )
 
             elif req_fmt == "txt":
                 text_content = []

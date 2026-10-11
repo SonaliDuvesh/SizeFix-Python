@@ -105,3 +105,66 @@ def test_rgba_to_jpeg_conversion(sample_png_path: Path, tmp_path: Path):
     assert result.format == "jpg"
     with Image.open(out_path) as img:
         assert img.mode == "RGB"
+
+def test_animated_gif_compression_preserves_animation(sample_animated_gif_path: Path, tmp_path: Path):
+    processor = ImageProcessor()
+    out_path = tmp_path / "out_compressed.gif"
+    analysis = analyze_file(sample_animated_gif_path, "test_animation.gif")
+    assert analysis.is_animated is True
+    assert analysis.frame_count == 5
+
+    options = ProcessRequestOptions(
+        quality=70,
+        output_format="gif"
+    )
+
+    result = processor.process(sample_animated_gif_path, out_path, analysis, options)
+    assert result.success is True
+    assert result.format == "gif"
+    assert out_path.exists()
+
+    with Image.open(out_path) as out_gif:
+        assert getattr(out_gif, "is_animated", False) is True
+        assert out_gif.n_frames == 5
+
+def test_animated_gif_resize_preserves_animation(sample_animated_gif_path: Path, tmp_path: Path):
+    processor = ImageProcessor()
+    out_path = tmp_path / "out_resized.gif"
+    analysis = analyze_file(sample_animated_gif_path, "test_animation.gif")
+
+    options = ProcessRequestOptions(
+        width=80,
+        maintain_aspect_ratio=True,
+        output_format="gif"
+    )
+
+    result = processor.process(sample_animated_gif_path, out_path, analysis, options)
+    assert result.success is True
+    assert result.width == 80
+    assert result.height == 80
+    assert out_path.exists()
+
+    with Image.open(out_path) as out_gif:
+        assert getattr(out_gif, "is_animated", False) is True
+        assert out_gif.n_frames == 5
+        assert out_gif.size == (80, 80)
+
+def test_animated_gif_to_webp_preserves_animation(sample_animated_gif_path: Path, tmp_path: Path):
+    processor = ImageProcessor()
+    out_path = tmp_path / "out_anim.webp"
+    analysis = analyze_file(sample_animated_gif_path, "test_animation.gif")
+
+    options = ProcessRequestOptions(
+        output_format="webp",
+        quality=80
+    )
+
+    result = processor.process(sample_animated_gif_path, out_path, analysis, options)
+    assert result.success is True
+    assert result.format == "webp"
+    assert out_path.exists()
+
+    with Image.open(out_path) as out_webp:
+        assert getattr(out_webp, "is_animated", False) is True
+        assert out_webp.n_frames == 5
+

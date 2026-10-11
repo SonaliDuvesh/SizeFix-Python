@@ -1,11 +1,12 @@
-# SizeFix - Advanced File Optimization & Conversion Engine
+# SizeFix-Python - Advanced File Optimization & Conversion Engine
 
 ```text
-  ____  ___ _____ _____ _____ ___ _  __
- / ___||_ _|__  /| ____|  ___|_ _|\ \/ /
- \___ \ | |  / / |  _| | |_   | |  \  / 
-  ___) || | / /_ | |___|  _|  | |  /  \ 
- |____/|___/____||_____|_|   |___|/_/\_\
+  ____  _           _____ _        ____        _   _                 
+ / ___|(_)_______  |  ___(_)_  __ |  _ \ _   _| |_| |__   ___  _ __  
+ \___ \| |_  / _ \ | |_  | \ \/ / | |_) | | | | __| '_ \ / _ \| '_ \ 
+  ___) | |/ /  __/ |  _| | |>  <  |  __/| |_| | |_| | | | (_) | | | |
+ |____/|_/___\___| |_|   |_/_/\_\ |_|    \__, |\__|_| |_|\___/|_| |_|
+                                         |___/                       
 ```
 
 <p align="center">
@@ -25,7 +26,7 @@
 
 ## Executive Summary
 
-**SizeFix** is an ultra-fast, local-first file processing suite engineered for strict target size control and seamless format conversions. Built from the ground up with high-performance Python engines (`Pillow`, `PyMuPDF`, `pillow-heif`) and a tactile Neo-Brutalist React frontend, SizeFix eliminates the guesswork of portal uploads, government forms, archival standards, and web distribution limits.
+**SizeFix-Python** is an ultra-fast, local-first file processing suite engineered for strict target size control and seamless format conversions. Built with a high-performance Python backend (`FastAPI`, `Pillow`, `PyMuPDF`, `pillow-heif`) and a tactile Neo-Brutalist React frontend, SizeFix-Python eliminates the guesswork of portal uploads, government forms, archival standards, and web distribution limits.
 
 No telemetry. No third-party cloud uploads. Zero data leaves your machine.
 
@@ -35,26 +36,30 @@ No telemetry. No third-party cloud uploads. Zero data leaves your machine.
 
 - **Sub-Percent Target Precision**: Proprietary **Two-Phase Binary Search + Micro-Scale Tuning** delivers output within ±0.5% of exact user-specified targets (`B`, `KB`, `MB`, `GB`).
 - **Bidirectional Target Control**: Supports lossless compression, smart deflation, as well as standards-compliant size expansion (up to `999 KB+`) via non-destructive stream padding.
+- **Multi-Page PDF to Image Transcoding**: Convert multi-page PDFs to JPG/PNG/WEBP as packaged `.zip` archives containing all pages, continuous vertically-stitched images, or first-page cover thumbnails.
+- **Full Animated GIF & WEBP Engine**: Compress and resize animated GIFs without losing animation frames, maintaining exact frame timings, loop counters, and alpha transparency with adaptive FASTOCTREE palette quantization.
 - **Neo-Brutalist Aesthetic**: Strict `0px` border-radius geometry with a vibrant Raspberry palette (`#FFF5F8` → `#C92F5B`), dark mode support, and tactile 4px offset shadows.
 - **Universal Cross-Platform Responsiveness**: Engineered for flawless touch and mouse workflows across Windows, macOS, Linux, iOS, and Android.
 - **100% Local & Ephemeral**: Direct streaming architecture with automated zero-footprint memory management and instant disk cleanup.
 
 ---
+
 ## Interface Showcase
 
 <div align="center">
 
 ### 1. Precision Ingestion & Format Zone
-![SizeFix Ingestion Interface](./image1.png)
+![SizeFix-Python Ingestion Interface](./image1.png)
 
 <br/>
 
 ### 2. Live Target Matching & Interactive Visual Comparison
-![SizeFix Processing Results & Quality Slider](./image2.png)
+![SizeFix-Python Processing Results & Quality Slider](./image2.png)
 
 </div>
 
 ---
+
 ## System Architecture & Data Flow
 
 ```mermaid
@@ -69,7 +74,7 @@ flowchart TD
         direction TB
         ANALYZER["Format & Stream Analyzer"]
         ROUTER{"Payload Category"}
-        IMG_PROC["Image Engine (Pillow + Lanczos)"]
+        IMG_PROC["Image Engine (Pillow + Lanczos + FASTOCTREE)"]
         PDF_PROC["PDF Engine (PyMuPDF Deflation)"]
         SEARCH["Adaptive Binary Quality Search"]
         PAD["Precision Stream Padder"]
@@ -79,8 +84,8 @@ flowchart TD
     ANALYZER -->|Metadata JSON| CFG
     CFG -->|Execute Process| ROUTER
     
-    ROUTER -->|Image MIME| IMG_PROC
-    ROUTER -->|Document MIME| PDF_PROC
+    ROUTER -->|Image MIME / GIF| IMG_PROC
+    ROUTER -->|Document MIME / PDF| PDF_PROC
     
     IMG_PROC --> SEARCH
     PDF_PROC --> SEARCH
@@ -91,21 +96,25 @@ flowchart TD
 ```
 
 ---
+
 ## Core Optimization Engines
 
 ### 1. Dual-Phase Image Micro-Tuner (`ImageProcessor`)
-When targeting precise file sizes (e.g. `600.00 KB`), typical encoders produce step-quantized jumps due to discrete quality integer limits (`1-100`). SizeFix solves this via a two-phase convergence loop:
+When targeting precise file sizes (e.g. `600.00 KB`), typical encoders produce step-quantized jumps due to discrete quality integer limits (`1-100`). SizeFix-Python solves this via a two-phase convergence loop:
 
 1. **Phase 1 - Coarse Binary Search**: Binary searches the JPEG/WEBP quality continuum across an adaptive scale ladder ($0.2\times$ to $2.5\times$).
 2. **Phase 2 - Micro-Resolution Dithering**: Fine-tunes image boundaries with fractional $\pm 0.5\%$ Lanczos scale factors to hit byte targets with $<0.2\%$ variance.
+3. **Animated Frame Preservation**: Iterates all frames via `ImageSequence.Iterator`, maintaining per-frame durations, alpha transparency, and disposal metadata across GIF and WEBP formats.
 
 ### 2. Deep PDF Stream Deflator (`PDFProcessor`)
 PDF documents undergo multi-layer inspection:
 - **Structural Optimization**: Garbage collection pass (`level=4`), cross-reference table deduplication, unreferenced object pruning.
 - **Embedded Raster Downsampling**: Extracts embedded images, converts color spaces (CMYK/RGBA $\rightarrow$ RGB), and recompresses streams with progressive DCT.
 - **Selectable Text Preservation**: Retains all native vector paths, fonts, forms, and OCR layers intact.
+- **Multi-Page Render Modes**: When transcoding PDFs to image formats (JPG, PNG, WEBP), exports all pages as a packaged `.zip` archive, stitches pages vertically, or exports the first-page thumbnail.
 
 ---
+
 ## Target Size Modes & Practical Use Cases
 
 | Mode | Behavior | Ideal Use Cases |
@@ -115,6 +124,7 @@ PDF documents undergo multi-layer inspection:
 | **`Size Range`** | Targets a balanced tolerance bracket ($\pm 5\%$ to $10\%$ of target bytes) while prioritizing visual fidelity and processing speed. | **Web Asset Budgets & Flexible Uploads**: Preparing hero images, blog graphics, or catalog photos targeted for a reasonable web budget (e.g. ~150 KB) without harsh compression artifacts; messaging and team drive sharing. |
 
 ---
+
 ## Comprehensive Format Support Matrix
 
 ```mermaid
@@ -128,32 +138,36 @@ graph LR
         PDF["PDF"]
         BMP["BMP"]
         TIFF["TIFF"]
-        GIF["GIF"]
+        GIF["GIF (Animated / Static)"]
     end
 
     subgraph Outputs["Transcoded Targets"]
         O_JPG["JPG (Progressive)"]
         O_PNG["PNG (Quantized / Lossless)"]
-        O_WEBP["WEBP (Next-Gen Compact)"]
+        O_WEBP["WEBP (Next-Gen Compact / Animated)"]
         O_AVIF["AVIF (Ultra High Compression)"]
+        O_GIF["GIF (Optimized Animation)"]
         O_PDF["PDF (Linearized & Cleaned)"]
         O_TXT["TXT (Full Text Extraction)"]
+        O_ZIP["ZIP (Multi-Page PDF Images)"]
     end
 
     JPG --> O_JPG & O_PNG & O_WEBP & O_AVIF & O_PDF
     PNG --> O_JPG & O_PNG & O_WEBP & O_AVIF & O_PDF
-    PDF --> O_PDF & O_JPG & O_PNG & O_WEBP & O_TXT
+    PDF --> O_PDF & O_JPG & O_PNG & O_WEBP & O_TXT & O_ZIP
     HEIC --> O_JPG & O_PNG & O_WEBP & O_PDF
+    GIF --> O_GIF & O_WEBP & O_JPG & O_PNG
 ```
 
 ---
+
 ## Quickstart Guide
 
 ### Prerequisites
-- **Python**: `3.10+` (tested with Python 3.12, 3.13, 3.14)
+- **Python**: `3.10+` (tested with Python 3.11, 3.12, 3.13, 3.14)
 - **Node.js**: `18.0+` & `npm`
 
-### 1. Clone & Setup Backend
+### 1. Setup & Launch Backend
 
 ```bash
 # Navigate to backend directory
@@ -169,9 +183,9 @@ pip install -r requirements.txt
 # Launch FastAPI development server
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-*Backend runs locally at: `http://localhost:8000` (API Docs: `http://localhost:8000/docs`)*
+*Backend runs locally at: `http://localhost:8000` (Interactive API Docs: `http://localhost:8000/docs`)*
 
-### 2. Setup Frontend
+### 2. Setup & Launch Frontend
 
 ```bash
 # In a new terminal, navigate to frontend
@@ -186,24 +200,26 @@ npm run dev -- --host 0.0.0.0 --port 5173
 *Access web application at: `http://localhost:5173`*
 
 ---
+
 ## Deployment Guide
 
-SizeFix is engineered for seamless dual-tier deployment on **Vercel** (Frontend) and **Render** (Backend):
+SizeFix-Python is engineered for seamless dual-tier deployment on **Vercel** (Frontend) and **Render** (Backend):
 
 ### 1. Deploy Frontend to Vercel
-The frontend operates either standalone (with its 100% in-browser pure TypeScript engine) or connected to the backend API:
 1. Import your GitHub repository into [Vercel](https://vercel.com).
 2. Configure project settings:
    - **Framework Preset**: `Vite`
    - **Root Directory**: `frontend`
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
-3. Click **Deploy**. Your in-browser optimization suite is immediately live with zero server requirements.
+3. Set environment variable:
+   - `VITE_API_BASE`: URL of your Render backend (e.g. `https://sizefix-python-api.onrender.com`)
+4. Click **Deploy**.
 
 ### 2. Deploy Backend to Render
-The high-performance Python engine can be deployed as a web service on [Render](https://render.com):
+The high-performance Python engine deploys directly via Render's Web Service:
 1. Create a new **Web Service** from your repository.
-2. Render automatically detects [`render.yaml`](./render.yaml), or configure manually:
+2. Render automatically detects [`render.yaml`](./render.yaml) (`sizefix-python-api`), or configure manually:
    - **Root Directory**: `backend`
    - **Runtime**: `Python 3` or `Docker`
    - **Build Command**: `pip install -r requirements.txt`
@@ -211,6 +227,7 @@ The high-performance Python engine can be deployed as a web service on [Render](
 3. Optional: Set `FRONTEND_URL` environment variable to your Vercel deployment URL for strict CORS isolation.
 
 ---
+
 ## REST API Documentation
 
 ### 1. `POST /api/v1/analyze`
@@ -240,36 +257,42 @@ Executes precision optimization or format transcoding.
 
 ```bash
 curl -X POST "http://localhost:8000/api/v1/process" \
-  -F "file=@photo.jpg" \
+  -F "file=@animation.gif" \
   -F "target_size=500 KB" \
-  -F "target_mode=exact" \
-  -F "output_format=webp" \
+  -F "target_mode=maximum" \
+  -F "output_format=gif" \
   -F "quality=85"
 ```
 
 ---
+
 ## Test Suite & Validation
 
-SizeFix comes equipped with a unit and integration test suite covering image quantization, boundary conditions, corrupt streams, and PDF parsing:
+SizeFix-Python comes equipped with a comprehensive unit and integration test suite covering image quantization, boundary conditions, corrupt streams, animated GIFs, and PDF parsing:
 
 ```bash
 cd backend
-PYTHONPATH=. .venv/bin/pytest -v
+.venv/bin/pytest -v
 ```
 
 ```text
-============================== 29 passed in 0.48s ==============================
+============================== 35 passed in 0.71s ==============================
 tests/test_analyzer.py::test_analyze_jpeg PASSED                         [ 3%]
 tests/test_analyzer.py::test_analyze_png PASSED                          [ 6%]
-tests/test_analyzer.py::test_analyze_pdf PASSED                          [10%]
-tests/test_image_processor.py::test_jpeg_target_maximum_size PASSED      [58%]
-tests/test_image_processor.py::test_image_target_range_mode PASSED       [62%]
-tests/test_pdf_processor.py::test_pdf_structure_and_image_compression PASSED [75%]
-tests/test_size_parser.py::test_parse_target_input_unified PASSED        [89%]
+tests/test_analyzer.py::test_analyze_pdf PASSED                          [ 9%]
+tests/test_image_processor.py::test_jpeg_compression_and_quality PASSED  [46%]
+tests/test_image_processor.py::test_animated_gif_compression_preserves_animation PASSED [57%]
+tests/test_image_processor.py::test_animated_gif_resize_preserves_animation PASSED [60%]
+tests/test_image_processor.py::test_animated_gif_to_webp_preserves_animation PASSED [63%]
+tests/test_pdf_processor.py::test_pdf_structure_and_image_compression PASSED [74%]
+tests/test_pdf_processor.py::test_pdf_to_jpg_separate_all_pages PASSED   [83%]
+tests/test_pdf_processor.py::test_pdf_to_jpg_stitch PASSED               [86%]
+tests/test_size_parser.py::test_parse_target_input_unified PASSED        [94%]
 ...
 ```
 
 ---
+
 ## Visual Identity & Neo-Brutalist Design Tokens
 
 | Token | Hex Value | Application |
@@ -282,9 +305,9 @@ tests/test_size_parser.py::test_parse_target_input_unified PASSED        [89%]
 | `--radius` | `0px` | Strict perpendicular geometry |
 
 ---
+
 ## Security & Privacy Guarantee
 
-- **Zero Remote Dependencies**: Works completely offline. No third-party analytics or external CDNs required.
+- **Zero Remote Dependencies**: Works completely offline or local-network. No third-party analytics or external CDNs required.
 - **EXIF Stripping**: Optional automated purge of GPS coordinates, device serial numbers, camera maker notes, and author metadata.
-- **Resource Guardrails**: Strict streaming caps (200 MB per payload) and deterministic garbage collection prevent memory exhaustion.
-
+- **Resource Guardrails**: Strict streaming caps (200 MB per payload) and deterministic temporary file pruning prevent disk and memory exhaustion.

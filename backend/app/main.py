@@ -25,8 +25,8 @@ app.add_middleware(
     ],
     allow_credentials=False,
     allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"]
+    allow_headers=["*", "ngrok-skip-browser-warning"],
+    expose_headers=["*", "ngrok-skip-browser-warning", "X-Processing-Result"]
 )
 
 @app.exception_handler(AppError)

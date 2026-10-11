@@ -40,6 +40,7 @@ def test_image_to_pdf_conversion(client: TestClient, sample_jpeg_path: Path):
     assert data["format"] == "pdf"
 
 def test_pdf_to_image_conversion(client: TestClient, sample_pdf_path: Path):
+    # Multi-page PDF exports all pages as a zip by default
     with open(sample_pdf_path, "rb") as f:
         response = client.post(
             "/process",
@@ -49,7 +50,21 @@ def test_pdf_to_image_conversion(client: TestClient, sample_pdf_path: Path):
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
-    assert data["format"] == "jpg"
+    assert data["format"] == "zip"
+    assert data["pages"] == 2
+    assert "page_01.jpg" in str(data.get("output_filename", "")) or data["output_filename"].endswith(".zip")
+
+    # If first_page mode is requested, returns single jpg
+    with open(sample_pdf_path, "rb") as f:
+        response_first = client.post(
+            "/process",
+            files={"file": ("doc.pdf", f, "application/pdf")},
+            data={"output_format": "jpg", "pdf_image_mode": "first_page", "response_mode": "json"}
+        )
+    assert response_first.status_code == 200
+    data_first = response_first.json()
+    assert data_first["success"] is True
+    assert data_first["format"] == "jpg"
 
 def test_pdf_to_txt_conversion(client: TestClient, sample_pdf_path: Path):
     with open(sample_pdf_path, "rb") as f:

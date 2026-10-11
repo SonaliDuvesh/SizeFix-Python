@@ -75,6 +75,12 @@ export const FileCard: React.FC<FileCardProps> = ({
                 </span>
               )}
 
+              {analysis.is_animated && (
+                <span className="sharp-tag sharp-tag-raspberry" style={{ fontSize: "0.7rem" }}>
+                  🎞️ {analysis.frame_count ? `${analysis.frame_count} frames` : "Animated"}
+                </span>
+              )}
+
               {analysis.pdf_pages && (
                 <span className="sharp-tag" style={{ fontSize: "0.7rem", background: "var(--bg-surface)" }}>
                   {analysis.pdf_pages} {analysis.pdf_pages === 1 ? "page" : "pages"}

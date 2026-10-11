@@ -1,5 +1,5 @@
 import { PDFDocument, PDFName, PDFNumber, PDFRawStream } from "pdf-lib";
-import pako from "pako";
+import * as pako from "pako";
 import type { ProcessRequestOptions, ProcessResult } from "../types";
 import { formatBytes, parseTargetBytes } from "./sizeParser";
 

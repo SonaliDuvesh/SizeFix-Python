@@ -1,5 +1,7 @@
 import json
+import mimetypes
 import shutil
+import time
 import uuid
 from pathlib import Path
 from typing import Optional, Literal
@@ -22,6 +24,18 @@ def cleanup_file(filepath: Path):
             filepath.unlink()
         except OSError:
             pass
+
+def prune_old_temp_files(max_age_seconds: int = 3600):
+    try:
+        now = time.time()
+        for p in settings.TEMP_DIR.iterdir():
+            if p.is_file() and p.name != ".gitkeep" and (now - p.stat().st_mtime) > max_age_seconds:
+                try:
+                    p.unlink()
+                except OSError:
+                    pass
+    except Exception:
+        pass
 
 @router.get("/health", tags=["System"])
 def health_check():
@@ -83,6 +97,7 @@ async def process_file(
     pdf_optimize_images: bool = Form(True),
     pdf_downsample_dpi: Optional[int] = Form(None),
     pdf_preserve_text: bool = Form(True),
+    pdf_image_mode: Optional[str] = Form("separate"),
     response_mode: Literal["file", "json"] = Form("json")
 ):
     safe_name = sanitize_filename(file.filename)
@@ -117,7 +132,8 @@ async def process_file(
             pdf_compression_level=pdf_compression_level,
             pdf_optimize_images=pdf_optimize_images,
             pdf_downsample_dpi=pdf_downsample_dpi,
-            pdf_preserve_text=pdf_preserve_text
+            pdf_preserve_text=pdf_preserve_text,
+            pdf_image_mode=pdf_image_mode
         )
 
         result = optimizer_service.optimize(
@@ -127,23 +143,29 @@ async def process_file(
             options=options
         )
         
-        result.output_file_id = temp_output.name
+        actual_output_name = result.output_filename or temp_output.name
+        actual_output = settings.TEMP_DIR / actual_output_name
+        result.output_file_id = actual_output_name
 
         if response_mode == "file":
             background_tasks.add_task(cleanup_file, temp_input)
-            background_tasks.add_task(cleanup_file, temp_output)
+            background_tasks.add_task(cleanup_file, actual_output)
+            background_tasks.add_task(prune_old_temp_files)
             
             headers = {
                 "X-Processing-Result": json.dumps(result.model_dump())
             }
+            media_type, _ = mimetypes.guess_type(str(actual_output))
+            dl_ext = Path(actual_output_name).suffix.lstrip(".")
             return FileResponse(
-                path=temp_output,
-                filename=f"optimized_{safe_name.rsplit('.', 1)[0]}.{out_ext}",
-                media_type="application/octet-stream",
+                path=actual_output,
+                filename=f"optimized_{safe_name.rsplit('.', 1)[0]}.{dl_ext}",
+                media_type=media_type or "application/octet-stream",
                 headers=headers
             )
         else:
             background_tasks.add_task(cleanup_file, temp_input)
+            background_tasks.add_task(prune_old_temp_files)
             return result
     except Exception:
         cleanup_file(temp_input)
@@ -158,8 +180,18 @@ async def download_processed_file(file_id: str, background_tasks: BackgroundTask
     if not file_path.exists():
         raise AppError("FILE_NOT_FOUND", "The requested processed file was not found or has expired.", status.HTTP_404_NOT_FOUND)
 
+    media_type, _ = mimetypes.guess_type(str(file_path))
+    if not media_type:
+        media_type = "application/octet-stream"
+
+    parts = safe_id.split("_", 2)
+    if len(parts) >= 3 and parts[0] == "out" and len(parts[1]) == 32:
+        download_name = f"optimized_{parts[2]}"
+    else:
+        download_name = safe_id
+
     return FileResponse(
         path=file_path,
-        filename=safe_id,
-        media_type="application/octet-stream"
+        filename=download_name,
+        media_type=media_type
     )

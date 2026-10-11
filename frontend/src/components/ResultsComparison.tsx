@@ -85,7 +85,7 @@ export const ResultsComparison: React.FC<ResultsComparisonProps> = ({
   const absPct = Math.abs(result.compression_ratio * 100).toFixed(1);
 
   const handleCopyInfo = () => {
-    const text = `SizeFix Optimization: ${result.original_filename} (${result.original_size_human}) -> ${result.output_size_human} (${isExpanded ? `+${absPct}% larger` : `${absPct}% smaller`})`;
+    const text = `SizeFix-Python Optimization: ${result.original_filename} (${result.original_size_human}) -> ${result.output_size_human} (${isExpanded ? `+${absPct}% larger` : `${absPct}% smaller`})`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

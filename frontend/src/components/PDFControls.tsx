@@ -12,6 +12,9 @@ interface PDFControlsProps {
   onRemoveMetadataChange: (val: boolean) => void;
   preserveText: boolean;
   onPreserveTextChange: (val: boolean) => void;
+  pdfImageMode?: "separate" | "stitch" | "first_page";
+  onPdfImageModeChange?: (mode: "separate" | "stitch" | "first_page") => void;
+  pageCount?: number;
 }
 
 export const PDFControls: React.FC<PDFControlsProps> = ({
@@ -25,6 +28,9 @@ export const PDFControls: React.FC<PDFControlsProps> = ({
   onRemoveMetadataChange,
   preserveText,
   onPreserveTextChange,
+  pdfImageMode = "separate",
+  onPdfImageModeChange,
+  pageCount,
 }) => {
   return (
     <div className="box-card-subtle mb-4">
@@ -56,6 +62,37 @@ export const PDFControls: React.FC<PDFControlsProps> = ({
           </optgroup>
         </select>
       </div>
+
+      {(outputFormat === "jpg" || outputFormat === "png" || outputFormat === "webp") && (
+        <div style={{ marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
+            <label style={{ fontSize: "0.85rem", fontWeight: 700 }}>
+              Multi-Page Export Mode
+            </label>
+            {pageCount && pageCount > 1 && (
+              <span className="sharp-tag sharp-tag-raspberry" style={{ fontSize: "0.7rem" }}>
+                {pageCount} Pages Detected
+              </span>
+            )}
+          </div>
+          <select
+            value={pdfImageMode}
+            onChange={(e) => onPdfImageModeChange?.(e.target.value as "separate" | "stitch" | "first_page")}
+            className="sharp-select"
+          >
+            <option value="separate">All Pages as ZIP (Individual {outputFormat.toUpperCase()} files)</option>
+            <option value="stitch">Stitch All Pages into One Long Image</option>
+            <option value="first_page">First Page Only (Single Thumbnail)</option>
+          </select>
+          <span style={{ fontSize: "0.72rem", color: "var(--secondary-text)", display: "block", marginTop: "0.35rem" }}>
+            {pdfImageMode === "separate"
+              ? "Exports all document pages into high-res images packaged in a clean ZIP download."
+              : pdfImageMode === "stitch"
+              ? "Vertically joins all pages into a continuous scrolling image."
+              : "Renders only page 1 of the document."}
+          </span>
+        </div>
+      )}
 
       {(!outputFormat || outputFormat === "original" || outputFormat === "pdf") && (
         <>

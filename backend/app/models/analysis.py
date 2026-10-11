@@ -16,6 +16,8 @@ class FileAnalysisResult(BaseModel):
     dimensions: Optional[ImageDimensions] = None
     color_mode: Optional[str] = None
     has_alpha: Optional[bool] = None
+    is_animated: Optional[bool] = None
+    frame_count: Optional[int] = None
     pdf_pages: Optional[int] = None
     pdf_metadata: Optional[dict[str, Any]] = None
     supported_operations: list[str] = Field(default_factory=list)

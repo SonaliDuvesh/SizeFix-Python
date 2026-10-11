@@ -64,6 +64,8 @@ def analyze_file(filepath: Path, original_filename: str) -> FileAnalysisResult:
     dimensions: Optional[ImageDimensions] = None
     color_mode: Optional[str] = None
     has_alpha: Optional[bool] = None
+    is_animated: Optional[bool] = None
+    frame_count: Optional[int] = None
     pdf_pages: Optional[int] = None
     pdf_metadata: Optional[dict] = None
     recommendations: dict = {}
@@ -79,8 +81,12 @@ def analyze_file(filepath: Path, original_filename: str) -> FileAnalysisResult:
                 dimensions = ImageDimensions(width=w, height=h)
                 color_mode = img.mode
                 has_alpha = img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info)
+                is_animated = bool(getattr(img, "is_animated", False) and getattr(img, "n_frames", 1) > 1)
+                frame_count = getattr(img, "n_frames", 1) if is_animated else None
                 
-                if ext in ("heic", "heif"):
+                if is_animated:
+                    recommendations["format"] = f"Animated image detected ({frame_count} frames). Animation and frame timing will be preserved."
+                elif ext in ("heic", "heif"):
                     recommendations["format"] = "HEIC photo detected. Convert to JPG or PNG for maximum web compatibility, or PDF for documents."
                 elif ext == "png" and size_bytes > 500 * 1024:
                     recommendations["format"] = "Converting large PNGs to WEBP or JPEG can achieve 70-90% size reduction with minimal visual loss."
@@ -125,6 +131,8 @@ def analyze_file(filepath: Path, original_filename: str) -> FileAnalysisResult:
         dimensions=dimensions,
         color_mode=color_mode,
         has_alpha=has_alpha,
+        is_animated=is_animated,
+        frame_count=frame_count,
         pdf_pages=pdf_pages,
         pdf_metadata=pdf_metadata,
         supported_operations=supported_operations,

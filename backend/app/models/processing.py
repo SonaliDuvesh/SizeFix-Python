@@ -32,6 +32,7 @@ class ProcessRequestOptions(BaseModel):
     pdf_optimize_images: bool = True
     pdf_downsample_dpi: Optional[int] = None
     pdf_preserve_text: bool = True
+    pdf_image_mode: Optional[Literal["separate", "stitch", "first_page"]] = "separate"
 
 class ProcessResult(BaseModel):
     success: bool

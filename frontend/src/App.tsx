@@ -38,6 +38,7 @@ export const App: React.FC = () => {
   const [pdfOptimizeImages, setPdfOptimizeImages] = useState<boolean>(true);
   const [pdfRemoveMeta, setPdfRemoveMeta] = useState<boolean>(true);
   const [pdfPreserveText, setPdfPreserveText] = useState<boolean>(true);
+  const [pdfImageMode, setPdfImageMode] = useState<"separate" | "stitch" | "first_page">("separate");
 
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -56,6 +57,7 @@ export const App: React.FC = () => {
     setErrorMessage(null);
     setProcessResult(null);
     setSelectedFile(file);
+    setOutputFormat("original");
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "";
     const isImg = file.type.startsWith("image/") || ["jpg", "jpeg", "png", "webp", "avif", "gif", "bmp", "tiff", "svg", "heic", "heif"].includes(ext);
@@ -105,6 +107,7 @@ export const App: React.FC = () => {
     setFilePreviewUrl(undefined);
     setWidth("");
     setHeight("");
+    setOutputFormat("original");
     setErrorMessage(null);
   };
 
@@ -115,11 +118,12 @@ export const App: React.FC = () => {
 
     try {
       const isPdf = selectedFile.type === "application/pdf" || selectedFile.name.toLowerCase().endsWith(".pdf") || analysis.category === "document";
+      const isPdfToImage = isPdf && (outputFormat === "jpg" || outputFormat === "jpeg" || outputFormat === "png" || outputFormat === "webp");
       const options = {
         target_size: targetValue ? `${targetValue} ${targetUnit}` : undefined,
         target_mode: targetMode,
         output_format: outputFormat !== "original" ? outputFormat : undefined,
-        quality: isPdf ? undefined : quality,
+        quality: isPdf && !isPdfToImage ? undefined : quality,
         width: width ? parseInt(width, 10) : undefined,
         height: height ? parseInt(height, 10) : undefined,
         maintain_aspect_ratio: maintainAspect,
@@ -128,6 +132,7 @@ export const App: React.FC = () => {
         pdf_compression_level: pdfCompressionLevel,
         pdf_optimize_images: pdfOptimizeImages,
         pdf_preserve_text: pdfPreserveText,
+        pdf_image_mode: isPdfToImage ? pdfImageMode : undefined,
       };
 
       const res = await ApiService.processFile(selectedFile, options);
@@ -185,7 +190,7 @@ export const App: React.FC = () => {
                         <h4 style={{ fontSize: "0.85rem", textTransform: "uppercase" }}>Optimization Engine</h4>
                       </div>
                       <p style={{ fontSize: "0.8rem", color: "var(--secondary-text)" }}>
-                        Adaptive binary-search quality tuning and micro-scaling execute 100% in your browser to reach your target size with highest fidelity.
+                        Adaptive binary-search quality tuning and micro-scaling execute seamlessly with SizeFix-Python to reach your target size with highest fidelity.
                       </p>
                     </div>
                   )}
@@ -246,6 +251,9 @@ export const App: React.FC = () => {
                   onRemoveMetadataChange={setPdfRemoveMeta}
                   preserveText={pdfPreserveText}
                   onPreserveTextChange={setPdfPreserveText}
+                  pdfImageMode={pdfImageMode}
+                  onPdfImageModeChange={setPdfImageMode}
+                  pageCount={analysis.pdf_pages}
                 />
               ) : null}
 

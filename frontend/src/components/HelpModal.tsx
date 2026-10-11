@@ -42,7 +42,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
             <BookOpen size={22} color="var(--strong-raspberry)" />
             <h2 style={{ fontSize: "1.25rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-              SizeFix Guide & Use Cases
+              SizeFix-Python Guide & Use Cases
             </h2>
           </div>
           <button onClick={onClose} className="btn-secondary" style={{ padding: "0.3rem 0.5rem" }} title="Close">

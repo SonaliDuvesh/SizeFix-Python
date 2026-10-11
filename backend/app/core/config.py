@@ -4,7 +4,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 class Settings(BaseModel):
-    PROJECT_NAME: str = "SizeFix Processing & Conversion Engine"
+    PROJECT_NAME: str = "SizeFix-Python Processing & Conversion Engine"
     API_V1_STR: str = "/api/v1"
     
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent

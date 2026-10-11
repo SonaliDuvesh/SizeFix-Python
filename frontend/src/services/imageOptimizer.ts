@@ -147,6 +147,12 @@ export async function processImageInBrowser(
     );
   }
 
+  if (originalExt === "gif" || outFormat === "gif") {
+    throw new Error(
+      "GIF compression and animation processing require the SizeFix-Python backend engine to preserve animation frames. Please ensure the backend is connected."
+    );
+  }
+
   if (!["jpg", "jpeg", "png", "webp"].includes(outFormat)) {
     outFormat = "jpg";
   }

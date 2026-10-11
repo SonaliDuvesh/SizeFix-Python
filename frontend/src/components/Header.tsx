@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
               border: "2px solid var(--border-color)",
               boxShadow: "2px 2px 0px var(--border-color)"
             }}>
-              SizeFix
+              SizeFix-Python
             </div>
             <span style={{ fontSize: "1.2rem", color: "var(--strong-raspberry)" }}>✦</span>
           </div>
@@ -39,10 +39,10 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "2px", flexWrap: "wrap" }}>
               <span className="sharp-tag sharp-tag-success" style={{ fontSize: "0.7rem" }}>
-                <ShieldCheck size={12} /> 100% In-Browser & Private
+                <ShieldCheck size={12} /> Local-First & Private
               </span>
               <span className="sharp-tag" style={{ fontSize: "0.7rem" }}>
-                <Cpu size={12} /> Zero Server Required
+                <Cpu size={12} /> Python FastAPI Engine
               </span>
             </div>
           </div>

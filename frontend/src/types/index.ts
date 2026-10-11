@@ -17,6 +17,8 @@ export interface FileAnalysisResult {
   dimensions?: ImageDimensions;
   color_mode?: string;
   has_alpha?: boolean;
+  is_animated?: boolean;
+  frame_count?: number;
   pdf_pages?: number;
   pdf_metadata?: Record<string, any>;
   supported_operations: string[];
@@ -41,6 +43,7 @@ export interface ProcessRequestOptions {
   pdf_optimize_images?: boolean;
   pdf_downsample_dpi?: number;
   pdf_preserve_text?: boolean;
+  pdf_image_mode?: "separate" | "stitch" | "first_page";
 }
 
 export interface ProcessResult {
